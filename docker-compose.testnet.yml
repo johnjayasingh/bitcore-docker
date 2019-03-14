@@ -1,19 +1,35 @@
-version: '2'
+version: '3'
 
 services:
-  bitcore:
-    container_name: bitcore
+  database:
+    image: mongo:3.4-jessie
+    ports: 
+    - 27017:27017
+    volumes: 
+    - /data/db:/data/db
+    
+  bitcore-node:
     build: .
-    restart: always
-    environment:
-      - TZ=Asia/Seoul
-      - NETWORK=testnet
+    image: bitcore-node
+    links:
+      - database
     ports:
-      - 80:3001
-      - 8333
+      - 8100:8100
+      - 3000:3000
+    environment:
+      - DB_HOST=database
+      - NETWORK=testnet
+    env_file: .env
     volumes:
       - data:/src/data
       - node_modules:/usr/local/lib/node_modules
+
+ insight:
+   image: insight
+   links:
+     - bitcore-node
+   environment:
+     - API_URL=bitcore-node
 
 volumes:
   data:
